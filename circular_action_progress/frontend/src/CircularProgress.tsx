@@ -3,7 +3,7 @@ import {
   withStreamlitConnection,
   ComponentProps,
 } from "streamlit-component-lib"
-import React, { useEffect, useMemo, ReactElement, useState } from "react"
+import React, { useEffect, useMemo, ReactElement, useState, useRef } from "react"
 
 // Define default theme colors for consistency
 const DEFAULT_COLORS = {
@@ -41,9 +41,22 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
     showPercentage = false  // Default to false - don't show percentage
   } = args
 
+  // Use ref to check if canceled was already reported to avoid flicker
+  const cancelReported = useRef(false);
+  
   // State for hover effect and cancel state
   const [isHovered, setIsHovered] = useState(false);
   const [isCanceled, setIsCanceled] = useState(false);
+  
+  // Keep a stable reference to the last valid value before cancellation
+  const lastValueRef = useRef(value);
+  
+  // Update lastValueRef when value changes while not canceled
+  useEffect(() => {
+    if (!isCanceled) {
+      lastValueRef.current = value;
+    }
+  }, [value, isCanceled]);
 
   // Use theme colors if custom colors aren't provided
   const progressColor = useMemo(() => {
@@ -74,8 +87,11 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
     return finalTrackColor;
   }, [trackColor, theme])
 
+  // Use the last stable value if canceled, otherwise use the current value
+  const displayValue = isCanceled ? lastValueRef.current : value;
+  
   // Constrain value between 0 and 100
-  const normalizedValue = Math.min(100, Math.max(0, value))
+  const normalizedValue = Math.min(100, Math.max(0, displayValue))
   
   // SVG path coordinates
   const radius = (size - thickness) / 2
@@ -88,23 +104,29 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
 
   // Handle cancel action
   const handleCancel = () => {
-    setIsCanceled(true);
-    // Send cancel event to Python
-    Streamlit.setComponentValue({
-      value: normalizedValue,
-      indeterminate: indeterminate,
-      canceled: true
-    });
+    if (!isCanceled) {
+      setIsCanceled(true);
+      cancelReported.current = false;
+    }
   };
 
-  // Send the current value back to Streamlit
+  // Send the current value back to Streamlit, but only report cancellation once
   useEffect(() => {
-    Streamlit.setComponentValue({
-      value: normalizedValue,
-      indeterminate: indeterminate,
-      canceled: isCanceled
-    })
-  }, [normalizedValue, indeterminate, isCanceled])
+    if (isCanceled && !cancelReported.current) {
+      Streamlit.setComponentValue({
+        value: normalizedValue,
+        indeterminate: indeterminate,
+        canceled: true
+      });
+      cancelReported.current = true;
+    } else if (!isCanceled) {
+      Streamlit.setComponentValue({
+        value: normalizedValue,
+        indeterminate: indeterminate,
+        canceled: false
+      });
+    }
+  }, [normalizedValue, indeterminate, isCanceled]);
 
   // Adjust frame height when component renders
   useEffect(() => {
@@ -112,9 +134,11 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
   }, [size, label])
 
   // Reset canceled state if new value is provided after cancellation
+  // but only if the value is significantly different (to avoid flicker)
   useEffect(() => {
-    if (isCanceled && value > 0) {
+    if (isCanceled && Math.abs(value - lastValueRef.current) > 5) {
       setIsCanceled(false);
+      cancelReported.current = false;
     }
   }, [value, isCanceled]);
 
