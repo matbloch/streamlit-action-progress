@@ -2,7 +2,9 @@
 
 > A circular process indicator featuring various styling options and multiple states.
 
-![preview](preview.png)
+
+
+![](https://raw.githubusercontent.com/matbloch/streamlit-action-progress/master/preview.png)
 
 ## Installation
 
