@@ -135,9 +135,12 @@ with examples_container:
 
 # Documentation in a separate container
 with docs_container:
-    st.header("Working with Cancellation")
+
+
+    st.header("Component features")
+
     st.write("""
-    ### Cancellation Features:
+    ### Working with Cancellation:
     1. Hover over any progress indicator to see the cancel button
     2. Click the cancel button to stop the operation
     3. The component returns a `canceled` flag in the returned dictionary
@@ -155,6 +158,33 @@ with docs_container:
         # User canceled the operation
         st.warning("Operation was canceled")
         # Handle cancellation logic here
+    """)
+
+
+    st.write("""
+    ### Reducing Flickering:
+    1. Always use a consistent `key` parameter for your component
+    2. Keep component rerenders to a minimum
+    3. Use session_state to track progress values
+    4. Structure your app with containers
+    5. Use forms for controls when possible
+    
+    The circular progress component has smooth transitions built in,
+    so even incremental updates should appear fluid.
+    """)
+    
+    st.code("""
+    # Example of smooth progress updates
+    progress = circular_action_progress(
+        value=st.session_state.progress_value,
+        key="your_progress_key"  # IMPORTANT: Use consistent key
+    )
+    
+    if st.session_state.running:
+        if st.session_state.progress_value < 100:
+            st.session_state.progress_value += 1
+            time.sleep(0.1)  # Control update speed
+            st.rerun()
     """)
 
 # Main update loop - keeps this at the end of the script
