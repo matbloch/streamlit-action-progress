@@ -145,10 +145,14 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
   // Determine if we should show the cancel overlay
   const showCancelOverlay = isHovered && allowCancel && !isCanceled && (normalizedValue > 0 || indeterminate);
 
+  // Determine if the circle is too small for text
+  const isSmallCircle = size < 50;
+
   // Get the appropriate text to display based on state
   const getStatusText = () => {
     if (isCanceled) {
-      return "Canceled";
+      // Always show percentage when canceled
+      return `${normalizedValue}%`;
     }
     return `${normalizedValue}%`;
   };
@@ -286,8 +290,8 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
           </div>
         )}
         
-        {/* Only show the percentage text if explicitly requested */}
-        {showPercentage && !indeterminate && !showCancelOverlay && (
+        {/* Only show the percentage text if explicitly requested or if canceled */}
+        {((showPercentage && !indeterminate) || isCanceled) && !showCancelOverlay && (
           <div 
             style={{
               position: "absolute", 
