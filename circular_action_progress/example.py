@@ -64,40 +64,55 @@ with main_container:
 
 # Other examples in a separate container
 with examples_container:
-    st.header("Customization Options")
-    col1, col2, col3 = st.columns(3)
+    st.header("Component Gallery")
+    
+    # First row
+    st.subheader("State & Animation Variants")
+    col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Indeterminate")
+        st.markdown("**Indeterminate Progress**")
         indeterminate_progress = circular_action_progress(
             indeterminate=True,
             size=60,
             thickness=5,
             color="#2196F3",
-            label="Loading...",
+            label="Processing...",
             key="indeterminate_progress"
         )
     
     with col2:
-        st.subheader("Custom Size")
+        st.markdown("**Standard Progress**")
+        circular_action_progress(
+            value=50,
+            key="default_styling",
+            label="Default Theme",
+        )
+    
+    # Second row
+    st.subheader("Visual Customization")
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        st.markdown("**Large Format**")
         custom_size_progress = circular_action_progress(
             value=75,
             size=80,
             thickness=10,
             color="#4CAF50",
-            label="Large Progress",
+            label="Enhanced Visibility",
             key="custom_size_progress"
         )
     
-    with col3:
-        st.subheader("Custom Colors")
+    with col4:
+        st.markdown("**Custom Theme**")
         custom_color_progress = circular_action_progress(
             value=50,
             size=60,
             thickness=5,
             color="#9C27B0",
             track_color="#F3E5F5",
-            label="Custom Colors",
+            label="Purple Accent",
             key="custom_color_progress"
         )
 

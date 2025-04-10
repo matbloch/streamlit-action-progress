@@ -5,6 +5,14 @@ import {
 } from "streamlit-component-lib"
 import React, { useEffect, useMemo, ReactElement } from "react"
 
+// Define default theme colors for consistency
+const DEFAULT_COLORS = {
+  progress: "#2196F3",  // Main progress color (bright blue)
+  track: "#EEEEEE",     // Track background (light gray)
+  text: "#2196F3",      // Text color for percentage
+  label: "#757575"      // Text color for label (gray)
+}
+
 interface CircularProgressProps extends ComponentProps {
   args: {
     value?: number;
@@ -30,11 +38,27 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
 
   // Use theme colors if custom colors aren't provided
   const progressColor = useMemo(() => {
-    return color || (theme ? theme.primaryColor : "#1976d2")
+    return color || (theme ? theme.primaryColor : DEFAULT_COLORS.progress)
   }, [color, theme])
 
   const progressTrackColor = useMemo(() => {
-    return trackColor || (theme ? theme.backgroundColor : "#e0e0e0")
+    // Ensure a visible track color is always used
+    // First check for explicit trackColor, then theme background, then default
+    // If track would be white, use the default instead
+    const themeColor = theme?.backgroundColor;
+    const finalTrackColor = trackColor || 
+                          (themeColor && themeColor.toLowerCase() !== "#ffffff" ? themeColor : DEFAULT_COLORS.track);
+    
+    // Convert to lowercase for robust comparison
+    const colorLower = finalTrackColor.toLowerCase();
+    
+    // Ensure we don't return white or transparent
+    if (colorLower === "#ffffff" || colorLower === "#fff" || 
+        colorLower === "white" || colorLower === "transparent") {
+      return DEFAULT_COLORS.track;
+    }
+    
+    return finalTrackColor;
   }, [trackColor, theme])
 
   // Constrain value between 0 and 100
@@ -70,6 +94,7 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
           position: "relative",
           width: size,
           height: size,
+          background: "transparent", // Ensure transparent background
         }}
       >
         <style>
@@ -102,14 +127,18 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
           }}
           viewBox={`0 0 ${size} ${size}`}
         >
+          {/* Debug rectangle to check if SVG is rendering */}
+          <rect x="0" y="0" width={size} height={size} fill="transparent" stroke="none" />
+          
           {/* Background circle */}
           <circle
             cx={center}
             cy={center}
             r={radius}
             fill="none"
-            stroke={progressTrackColor}
+            stroke={progressTrackColor || "#E3F2FD"} // Ensure a fallback
             strokeWidth={thickness}
+            strokeOpacity={1} // Ensure full opacity
           />
           {/* Progress circle */}
           <circle
@@ -144,7 +173,9 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: theme ? theme.textColor : "#000000"
+              color: theme ? theme.textColor : DEFAULT_COLORS.text,
+              fontSize: `${Math.max(size / 4.5, 12)}px`,
+              fontWeight: 500
             }}
           >
             {normalizedValue}%
@@ -155,8 +186,9 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
         <div 
           style={{ 
             marginTop: 8, 
-            color: theme ? theme.textColor : "#000000",
-            fontSize: "0.875rem" 
+            color: theme ? theme.textColor : DEFAULT_COLORS.label,
+            fontSize: "0.875rem",
+            fontWeight: 400
           }}
         >
           {label}
