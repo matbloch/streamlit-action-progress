@@ -1,15 +1,22 @@
 # Streamlit Action Progress
 
+> A circular process indicator featuring various styling options and multiple states.
 
+![preview](preview.png)
 
-## Installation instructions
+## Installation
 
-```sh
+```bash
 pip install streamlit-action-progress
 ```
 
 
-### 🛠️ Development setup
+
+
+
+## 🛠️ Development
+
+### Environment setup
 
 **Requirements**
 
@@ -55,7 +62,6 @@ streamlet run streamlit_action_progress/example.py
 - Local URL: http://localhost:8501
 
 
-
 ### 📦 Building a Python wheel
 
 01. Change the release flag in `streamlit_action_progress/__init__.py` to `True`
@@ -67,7 +73,7 @@ _RELEASE = True
 02. Compile the frontend
 
 Inside `streamlit_action_progress/frontend`
- 
+
 ```bash
 npm run build
 ```
