@@ -6,6 +6,7 @@ from circular_action_progress import circular_action_progress
 if 'running' not in st.session_state:
     st.session_state.running = False
     st.session_state.progress_value = 0
+    st.session_state.canceled = False
 
 def increment_progress():
     """Function to increment progress and handle completion"""
@@ -42,7 +43,19 @@ with main_container:
             key="smooth_progress"
         )
 
-        st.info(f"Current value: {comp_value['value']}%")
+        # Check if the progress was canceled
+        if comp_value.get('canceled', False):
+            if not st.session_state.canceled:
+                st.session_state.canceled = True
+                st.session_state.running = False
+                st.warning("Operation was canceled by user")
+                st.rerun()
+        
+        # Show the current progress value
+        status_text = f"Current value: {comp_value['value']}%"
+        if st.session_state.canceled:
+            status_text += " (Canceled)"
+        st.info(status_text)
     
     with col2:
         # Control buttons in a form to prevent re-rendering
@@ -56,6 +69,7 @@ with main_container:
                     # Start
                     st.session_state.running = True
                     st.session_state.progress_value = 0
+                    st.session_state.canceled = False
                 st.rerun()
             
             if st.form_submit_button("Stop", disabled=not st.session_state.running):
@@ -72,7 +86,7 @@ with examples_container:
     
     with col1:
         st.markdown("**Indeterminate Progress**")
-        indeterminate_progress = circular_action_progress(
+        indeterminate_value = circular_action_progress(
             indeterminate=True,
             size=60,
             thickness=5,
@@ -80,14 +94,23 @@ with examples_container:
             label="Processing...",
             key="indeterminate_progress"
         )
+        
+        # Check for cancellation
+        if indeterminate_value.get('canceled', False):
+            st.caption("Indeterminate progress was canceled")
     
     with col2:
-        st.markdown("**Standard Progress**")
-        circular_action_progress(
+        st.markdown("**Pulsating Progress**")
+        standard_value = circular_action_progress(
             value=50,
             key="default_styling",
             label="Default Theme",
+            show_percentage=False  # Don't show percentage inside
         )
+        
+        # Check for cancellation
+        if standard_value.get('canceled', False):
+            st.caption("Standard progress was canceled")
     
     # Second row
     st.subheader("Visual Customization")
@@ -95,58 +118,63 @@ with examples_container:
     
     with col3:
         st.markdown("**Large Format**")
-        custom_size_progress = circular_action_progress(
+        large_value = circular_action_progress(
             value=75,
             size=80,
             thickness=10,
             color="#4CAF50",
             label="Enhanced Visibility",
-            key="custom_size_progress"
+            key="custom_size_progress",
+            show_percentage=False  # Don't show percentage inside
         )
+        
+        # Check for cancellation
+        if large_value.get('canceled', False):
+            st.caption("Large format progress was canceled")
     
     with col4:
-        st.markdown("**Custom Theme**")
-        custom_color_progress = circular_action_progress(
+        st.markdown("**With Percentage**")
+        custom_value = circular_action_progress(
             value=50,
             size=60,
             thickness=5,
             color="#9C27B0",
             track_color="#F3E5F5",
-            label="Purple Accent",
-            key="custom_color_progress"
+            label="Classic Style",
+            key="custom_color_progress",
+            show_percentage=True  # Show percentage inside
         )
+        
+        # Check for cancellation
+        if custom_value.get('canceled', False):
+            st.caption("Custom theme progress was canceled")
 
 # Documentation in a separate container
 with docs_container:
-    st.header("Tips for Smooth Progress Updates")
+    st.header("Working with Cancellation")
     st.write("""
-    ### Reducing Flickering:
-    1. Always use a consistent `key` parameter for your component
-    2. Keep component rerenders to a minimum
-    3. Use session_state to track progress values
-    4. Structure your app with containers
-    5. Use forms for controls when possible
-    
-    The circular progress component has smooth transitions built in,
-    so even incremental updates should appear fluid.
+    ### Cancellation Features:
+    1. Hover over any progress indicator to see the cancel button
+    2. Click the cancel button to stop the operation
+    3. The component returns a `canceled` flag in the returned dictionary
+    4. You can detect cancellation and take appropriate action in your code
     """)
     
     st.code("""
-    # Example of smooth progress updates
+    # Example of handling cancellation
     progress = circular_action_progress(
-        value=st.session_state.progress_value,
-        key="your_progress_key"  # IMPORTANT: Use consistent key
+        value=50,
+        key="progress_with_cancel"
     )
     
-    if st.session_state.running:
-        if st.session_state.progress_value < 100:
-            st.session_state.progress_value += 1
-            time.sleep(0.1)  # Control update speed
-            st.rerun()
+    if progress.get('canceled', False):
+        # User canceled the operation
+        st.warning("Operation was canceled")
+        # Handle cancellation logic here
     """)
 
 # Main update loop - keeps this at the end of the script
-if st.session_state.running:
+if st.session_state.running and not st.session_state.canceled:
     # Small delay to control speed
     time.sleep(0.1)
     

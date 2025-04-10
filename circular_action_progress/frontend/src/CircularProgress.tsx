@@ -3,14 +3,15 @@ import {
   withStreamlitConnection,
   ComponentProps,
 } from "streamlit-component-lib"
-import React, { useEffect, useMemo, ReactElement } from "react"
+import React, { useEffect, useMemo, ReactElement, useState } from "react"
 
 // Define default theme colors for consistency
 const DEFAULT_COLORS = {
   progress: "#2196F3",  // Main progress color (bright blue)
   track: "#EEEEEE",     // Track background (light gray)
   text: "#2196F3",      // Text color for percentage
-  label: "#757575"      // Text color for label (gray)
+  label: "#757575",     // Text color for label (gray)
+  canceled: "#F44336"   // Red color for canceled state
 }
 
 interface CircularProgressProps extends ComponentProps {
@@ -22,6 +23,8 @@ interface CircularProgressProps extends ComponentProps {
     trackColor?: string;
     indeterminate?: boolean;
     label?: string;
+    allowCancel?: boolean;  // Option to enable/disable cancel functionality
+    showPercentage?: boolean; // Whether to show the percentage value
   }
 }
 
@@ -33,13 +36,23 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
     color,
     trackColor,
     indeterminate = false,
-    label
+    label,
+    allowCancel = true,  // Default to true
+    showPercentage = false  // Default to false - don't show percentage
   } = args
+
+  // State for hover effect and cancel state
+  const [isHovered, setIsHovered] = useState(false);
+  const [isCanceled, setIsCanceled] = useState(false);
 
   // Use theme colors if custom colors aren't provided
   const progressColor = useMemo(() => {
-    return color || (theme ? theme.primaryColor : DEFAULT_COLORS.progress)
-  }, [color, theme])
+    // If canceled, use the canceled color
+    if (isCanceled) {
+      return DEFAULT_COLORS.canceled;
+    }
+    return color || (theme ? theme.primaryColor : DEFAULT_COLORS.progress);
+  }, [color, theme, isCanceled])
 
   const progressTrackColor = useMemo(() => {
     // Ensure a visible track color is always used
@@ -73,18 +86,63 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
   // Center point of the circle
   const center = size / 2
 
+  // Handle cancel action
+  const handleCancel = () => {
+    setIsCanceled(true);
+    // Send cancel event to Python
+    Streamlit.setComponentValue({
+      value: normalizedValue,
+      indeterminate: indeterminate,
+      canceled: true
+    });
+  };
+
   // Send the current value back to Streamlit
   useEffect(() => {
     Streamlit.setComponentValue({
       value: normalizedValue,
-      indeterminate: indeterminate
+      indeterminate: indeterminate,
+      canceled: isCanceled
     })
-  }, [normalizedValue, indeterminate])
+  }, [normalizedValue, indeterminate, isCanceled])
 
   // Adjust frame height when component renders
   useEffect(() => {
     Streamlit.setFrameHeight()
   }, [size, label])
+
+  // Reset canceled state if new value is provided after cancellation
+  useEffect(() => {
+    if (isCanceled && value > 0) {
+      setIsCanceled(false);
+    }
+  }, [value, isCanceled]);
+
+  // Determine if we should show the cancel overlay
+  const showCancelOverlay = isHovered && allowCancel && !isCanceled && (normalizedValue > 0 || indeterminate);
+
+  // Get the appropriate text to display based on state
+  const getStatusText = () => {
+    if (isCanceled) {
+      return "Canceled";
+    }
+    return `${normalizedValue}%`;
+  };
+
+  // Get the appropriate label based on state
+  const getLabel = () => {
+    if (isCanceled) {
+      return "Operation Canceled";
+    }
+    // If we don't show percentage in the circle, show it in the label
+    if (!showPercentage && normalizedValue > 0 && !indeterminate) {
+      return label ? `${label} (${normalizedValue}%)` : `${normalizedValue}%`;
+    }
+    return label;
+  };
+
+  // Determine if we should use a pulsing animation
+  const shouldPulse = isCanceled || (!indeterminate && normalizedValue > 0);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -95,7 +153,11 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
           width: size,
           height: size,
           background: "transparent", // Ensure transparent background
+          cursor: showCancelOverlay ? "pointer" : "default"
         }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={showCancelOverlay ? handleCancel : undefined}
       >
         <style>
           {`
@@ -118,25 +180,33 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
                 stroke-dashoffset: ${(circumference * 0.8).toFixed(3)}px;
               }
             }
+            
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+
+            @keyframes pulse {
+              0% { opacity: 1; }
+              50% { opacity: 0.6; }
+              100% { opacity: 1; }
+            }
           `}
         </style>
         <svg
           style={{
             transform: indeterminate ? "rotate(-90deg)" : undefined,
-            animation: indeterminate ? "circular-rotate 1.4s linear infinite" : undefined,
+            animation: indeterminate && !isCanceled ? "circular-rotate 1.4s linear infinite" : undefined,
           }}
           viewBox={`0 0 ${size} ${size}`}
         >
-          {/* Debug rectangle to check if SVG is rendering */}
-          <rect x="0" y="0" width={size} height={size} fill="transparent" stroke="none" />
-          
           {/* Background circle */}
           <circle
             cx={center}
             cy={center}
             r={radius}
             fill="none"
-            stroke={progressTrackColor || "#E3F2FD"} // Ensure a fallback
+            stroke={progressTrackColor || "#EEEEEE"} // Ensure a fallback
             strokeWidth={thickness}
             strokeOpacity={1} // Ensure full opacity
           />
@@ -150,19 +220,50 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
             strokeWidth={thickness}
             strokeLinecap="round"
             style={{
-              strokeDasharray: indeterminate 
+              strokeDasharray: indeterminate && !isCanceled
                 ? `${(circumference * 0.8).toFixed(3)}px, ${circumference}px` 
-                : strokeDasharray,
-              strokeDashoffset: indeterminate 
+                : isCanceled ? circumference : strokeDasharray,
+              strokeDashoffset: indeterminate && !isCanceled
                 ? `${(circumference * 0.2).toFixed(3)}px` 
-                : strokeDashoffset,
-              animation: indeterminate ? "circular-dash 1.4s ease-in-out infinite" : undefined,
-              transition: indeterminate ? undefined : "stroke-dashoffset 300ms cubic-bezier(0.4, 0, 0.2, 1)",
+                : isCanceled ? "0" : strokeDashoffset,
+              animation: indeterminate && !isCanceled 
+                ? "circular-dash 1.4s ease-in-out infinite" 
+                : shouldPulse ? "pulse 2s ease-in-out infinite" : undefined,
+              transition: !indeterminate && !isCanceled ? "stroke-dashoffset 300ms cubic-bezier(0.4, 0, 0.2, 1)" : undefined,
             }}
             transform={`rotate(-90 ${center} ${center})`}
           />
         </svg>
-        {!indeterminate && (
+        
+        {/* Cancel overlay that appears on hover */}
+        {showCancelOverlay && (
+          <div 
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              borderRadius: "50%",
+              background: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              animation: "fadeIn 0.2s ease-in-out",
+              color: "white",
+              zIndex: 10
+            }}
+            title="Cancel"
+          >
+            {/* X icon for cancel */}
+            <svg width={size * 0.4} height={size * 0.4} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" />
+            </svg>
+          </div>
+        )}
+        
+        {/* Only show the percentage text if explicitly requested */}
+        {showPercentage && !indeterminate && !showCancelOverlay && (
           <div 
             style={{
               position: "absolute", 
@@ -173,25 +274,26 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: theme ? theme.textColor : DEFAULT_COLORS.text,
+              color: isCanceled ? DEFAULT_COLORS.canceled : (theme ? theme.textColor : DEFAULT_COLORS.text),
               fontSize: `${Math.max(size / 4.5, 12)}px`,
-              fontWeight: 500
+              fontWeight: 500,
+              zIndex: 5
             }}
           >
-            {normalizedValue}%
+            {getStatusText()}
           </div>
         )}
       </div>
-      {label && (
+      {(label || isCanceled || (!showPercentage && normalizedValue > 0)) && (
         <div 
           style={{ 
             marginTop: 8, 
-            color: theme ? theme.textColor : DEFAULT_COLORS.label,
+            color: isCanceled ? DEFAULT_COLORS.canceled : (theme ? theme.textColor : DEFAULT_COLORS.label),
             fontSize: "0.875rem",
             fontWeight: 400
           }}
         >
-          {label}
+          {getLabel()}
         </div>
       )}
     </div>

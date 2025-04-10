@@ -50,7 +50,9 @@ def circular_action_progress(
     color=None, 
     track_color=None, 
     indeterminate=False, 
-    label=None, 
+    label=None,
+    allow_cancel=True,
+    show_percentage=False,
     key=None
 ):
     """Create a circular progress indicator component.
@@ -71,6 +73,12 @@ def circular_action_progress(
         Whether the progress is indeterminate (loading/processing state).
     label: str or None
         Optional label to display beneath the progress indicator.
+    allow_cancel: bool
+        Whether to show a cancel button when hovering over the progress indicator.
+        When clicked, the component will return a 'canceled' flag set to True.
+    show_percentage: bool
+        Whether to show the percentage value inside the progress indicator.
+        If False, the percentage will be shown in the label if provided.
     key: str or None
         An optional key that uniquely identifies this component. If this is
         None, and the component's arguments are changed, the component will
@@ -82,7 +90,8 @@ def circular_action_progress(
         A dictionary containing the current value and state of the progress indicator.
         {
             "value": float,
-            "indeterminate": bool
+            "indeterminate": bool,
+            "canceled": bool
         }
     """
     # Call through to our private component function. Arguments we pass here
@@ -96,8 +105,10 @@ def circular_action_progress(
         trackColor=track_color,  # Convert snake_case to camelCase for JavaScript
         indeterminate=indeterminate,
         label=label,
+        allowCancel=allow_cancel,  # Parameter for cancel functionality
+        showPercentage=show_percentage,  # Parameter for showing percentage
         key=key,
-        default={"value": value, "indeterminate": indeterminate}
+        default={"value": value, "indeterminate": indeterminate, "canceled": False}
     )
 
     return component_value
