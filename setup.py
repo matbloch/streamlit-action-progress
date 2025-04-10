@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setuptools.setup(
     name="streamlit-action-progress",
-    version="0.0.1",
+    version="0.1.10",
     author="Matthias Bloch",
     author_email="john@example.com",
     description="",

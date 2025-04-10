@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from circular_action_progress import circular_action_progress
+from streamlit_action_progress import streamlit_action_progress
 
 # Initialize session state variables
 if 'running' not in st.session_state:
@@ -34,7 +34,7 @@ with main_container:
     
     with col1:
         # Place the progress indicator here
-        comp_value = circular_action_progress(
+        comp_value = streamlit_action_progress(
             value=st.session_state.progress_value,
             size=100, 
             thickness=8,
@@ -86,7 +86,7 @@ with examples_container:
     
     with col1:
         st.markdown("**Indeterminate Progress**")
-        indeterminate_value = circular_action_progress(
+        indeterminate_value = streamlit_action_progress(
             indeterminate=True,
             size=60,
             thickness=5,
@@ -97,7 +97,7 @@ with examples_container:
     
     with col2:
         st.markdown("**Pulsating Progress**")
-        standard_value = circular_action_progress(
+        standard_value = streamlit_action_progress(
             value=50,
             key="default_styling",
             label="Default Theme",
@@ -110,7 +110,7 @@ with examples_container:
     
     with col3:
         st.markdown("**Large Format**")
-        large_value = circular_action_progress(
+        large_value = streamlit_action_progress(
             value=75,
             size=80,
             thickness=10,
@@ -122,7 +122,7 @@ with examples_container:
     
     with col4:
         st.markdown("**Custom colors and %**")
-        custom_value = circular_action_progress(
+        custom_value = streamlit_action_progress(
             value=50,
             size=60,
             thickness=5,
@@ -149,7 +149,7 @@ with docs_container:
     
     st.code("""
     # Example of handling cancellation
-    progress = circular_action_progress(
+    progress = streamlit_action_progress(
         value=50,
         key="progress_with_cancel"
     )
@@ -175,7 +175,7 @@ with docs_container:
     
     st.code("""
     # Example of smooth progress updates
-    progress = circular_action_progress(
+    progress = streamlit_action_progress(
         value=st.session_state.progress_value,
         key="your_progress_key"  # IMPORTANT: Use consistent key
     )

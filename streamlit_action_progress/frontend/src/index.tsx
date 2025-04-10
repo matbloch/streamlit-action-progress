@@ -1,6 +1,6 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
-import CircularProgress from "./CircularProgress"
+import ActionProgress from "./ActionProgress"
 
 const rootElement = document.getElementById("root")
 if (!rootElement) throw new Error("Failed to find the root element")
@@ -8,6 +8,6 @@ if (!rootElement) throw new Error("Failed to find the root element")
 const root = ReactDOM.createRoot(rootElement)
 root.render(
   <React.StrictMode>
-    <CircularProgress/>
+    <ActionProgress/>
   </React.StrictMode>
 )

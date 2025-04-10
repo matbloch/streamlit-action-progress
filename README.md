@@ -1,11 +1,11 @@
-# streamlit-custom-component
+# Streamlit Action Progress
 
-Streamlit component that allows you to do X
+
 
 ## Installation instructions
 
 ```sh
-pip install streamlit-custom-component
+pip install streamlit-action-progress
 ```
 
 
@@ -31,11 +31,13 @@ pip install streamlet
 **03. Install requirements for frontend**
 
 ```bash
-cd my_component/frontend
+cd streamlit_action_progress/frontend
 npm install
 ```
 
 **03. Run frontend dev server and python Streamlet component**
+
+Inside `streamlit_action_progress/frontend`
 
 ```bash
 npm start
@@ -43,7 +45,7 @@ npm start
 
 ```bash
 pip install -e .
-streamlet run streamlit_picture_in_picture_video/example.py
+streamlet run streamlit_action_progress/example.py
 ```
 
 
@@ -56,19 +58,28 @@ streamlet run streamlit_picture_in_picture_video/example.py
 
 ### 📦 Building a Python wheel
 
-01. Change the release flag in `streamlit_picture_in_picture/__init__.py` to `True`
+01. Change the release flag in `streamlit_action_progress/__init__.py` to `True`
 
 ```python
 _RELEASE = True
 ```
 
-02. Build the wheel
+02. Compile the frontend
+
+Inside `streamlit_action_progress/frontend`
+ 
+```bash
+npm run build
+```
+
+
+1.   Build the wheel
 
 ```bash
 python setup.py sdist bdist_wheel
 ```
 
-03. Publish to PyPi
+04. Publish to PyPi
 ```bash
 twine upload dist/*
 ```
