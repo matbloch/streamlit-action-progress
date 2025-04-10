@@ -23,7 +23,7 @@ if not _RELEASE:
         # We give the component a simple, descriptive name ("my_component"
         # does not fit this bill, so please choose something better for your
         # own component :)
-        "my_component",
+        "circular_action_progress",
         # Pass `url` here to tell Streamlit that the component will be served
         # by the local dev server that you run via `npm run start`.
         # (This is useful while your component is in development.)
@@ -35,7 +35,7 @@ else:
     # build directory:
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     build_dir = os.path.join(parent_dir, "frontend/build")
-    _component_func = components.declare_component("my_component", path=build_dir)
+    _component_func = components.declare_component("circular_action_progress", path=build_dir)
 
 
 # Create a wrapper function for the component. This is an optional
@@ -43,14 +43,34 @@ else:
 # `declare_component` and call it done. The wrapper allows us to customize
 # our component's API: we can pre-process its input args, post-process its
 # output value, and add a docstring for users.
-def my_component(name, key=None):
-    """Create a new instance of "my_component".
+def circular_action_progress(
+    value=0, 
+    size=40, 
+    thickness=3.6, 
+    color=None, 
+    track_color=None, 
+    indeterminate=False, 
+    label=None, 
+    key=None
+):
+    """Create a circular progress indicator component.
 
     Parameters
     ----------
-    name: str
-        The name of the thing we're saying hello to. The component will display
-        the text "Hello, {name}!"
+    value: int or float
+        The value of the progress indicator. Value between 0 and 100.
+    size: int
+        The size of the circle in pixels.
+    thickness: float
+        The thickness of the circle.
+    color: str or None
+        The color of the progress. If None, uses the theme's primary color.
+    track_color: str or None
+        The color of the track. If None, uses the theme's background color.
+    indeterminate: bool
+        Whether the progress is indeterminate (loading/processing state).
+    label: str or None
+        Optional label to display beneath the progress indicator.
     key: str or None
         An optional key that uniquely identifies this component. If this is
         None, and the component's arguments are changed, the component will
@@ -58,20 +78,26 @@ def my_component(name, key=None):
 
     Returns
     -------
-    int
-        The number of times the component's "Click Me" button has been clicked.
-        (This is the value passed to `Streamlit.setComponentValue` on the
-        frontend.)
-
+    dict
+        A dictionary containing the current value and state of the progress indicator.
+        {
+            "value": float,
+            "indeterminate": bool
+        }
     """
     # Call through to our private component function. Arguments we pass here
     # will be sent to the frontend, where they'll be available in an "args"
     # dictionary.
-    #
-    # "default" is a special argument that specifies the initial return
-    # value of the component before the user has interacted with it.
-    component_value = _component_func(name=name, key=key, default=0)
+    component_value = _component_func(
+        value=value,
+        size=size,
+        thickness=thickness,
+        color=color,
+        trackColor=track_color,  # Convert snake_case to camelCase for JavaScript
+        indeterminate=indeterminate,
+        label=label,
+        key=key,
+        default={"value": value, "indeterminate": indeterminate}
+    )
 
-    # We could modify the value returned from the component if we wanted.
-    # There's no need to do this in our simple example - but it's an option.
     return component_value

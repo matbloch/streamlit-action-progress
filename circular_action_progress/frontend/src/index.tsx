@@ -1,10 +1,10 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import MyComponent from "./MyComponent"
+import CircularProgress from "./CircularProgress"
 
 ReactDOM.render(
   <React.StrictMode>
-    <MyComponent />
+    <CircularProgress/>
   </React.StrictMode>,
   document.getElementById("root")
 )
