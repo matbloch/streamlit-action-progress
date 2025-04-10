@@ -156,7 +156,7 @@ function CircularProgress({ args, theme }: CircularProgressProps): ReactElement 
   // Get the appropriate label based on state
   const getLabel = () => {
     if (isCanceled) {
-      return "Operation Canceled";
+      return "Canceled";
     }
     // If we don't show percentage in the circle, show it in the label
     if (!showPercentage && normalizedValue > 0 && !indeterminate) {

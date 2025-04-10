@@ -94,10 +94,6 @@ with examples_container:
             label="Processing...",
             key="indeterminate_progress"
         )
-        
-        # Check for cancellation
-        if indeterminate_value.get('canceled', False):
-            st.caption("Indeterminate progress was canceled")
     
     with col2:
         st.markdown("**Pulsating Progress**")
@@ -107,10 +103,6 @@ with examples_container:
             label="Default Theme",
             show_percentage=False  # Don't show percentage inside
         )
-        
-        # Check for cancellation
-        if standard_value.get('canceled', False):
-            st.caption("Standard progress was canceled")
     
     # Second row
     st.subheader("Visual Customization")
@@ -127,27 +119,19 @@ with examples_container:
             key="custom_size_progress",
             show_percentage=False  # Don't show percentage inside
         )
-        
-        # Check for cancellation
-        if large_value.get('canceled', False):
-            st.caption("Large format progress was canceled")
     
     with col4:
-        st.markdown("**With Percentage**")
+        st.markdown("**Custom colors and %**")
         custom_value = circular_action_progress(
             value=50,
             size=60,
             thickness=5,
             color="#9C27B0",
             track_color="#F3E5F5",
-            label="Classic Style",
+            #label="Classic Style",
             key="custom_color_progress",
             show_percentage=True  # Show percentage inside
         )
-        
-        # Check for cancellation
-        if custom_value.get('canceled', False):
-            st.caption("Custom theme progress was canceled")
 
 # Documentation in a separate container
 with docs_container:
